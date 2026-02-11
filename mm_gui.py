@@ -3,11 +3,22 @@
 import tkinter as tk
 from main import MouseMover
 
+from tkinter import ttk
+
+
 # ---------- GUI CALLBACK ----------
 
-def update_counters(afk, total):
+def update_counters(afk, total, active, afk_limit):
     afk_label.config(text=f"AFK: {afk}s")
     total_label.config(text=f"Runtime: {total}s")
+
+    progress["maximum"] = afk_limit
+    progress["value"] = afk
+
+    if active:
+        status_icon.config(text="🟢 ACTIVE", fg="green")
+    else:
+        status_icon.config(text="🔴 WAITING", fg="red")
 
 
 mover = MouseMover(status_callback=update_counters)
@@ -17,15 +28,23 @@ mover = MouseMover(status_callback=update_counters)
 def start_mover():
     try:
         afk_time = int(time_entry.get())
+        move_interval = int(interval_entry.get())
         width = int(width_entry.get())
         height = int(height_entry.get())
 
-        mover.update_settings(afk_time, width, height)
+        mover.update_settings(
+            afk_time,
+            move_interval,
+            width,
+            height
+        )
+
         mover.start()
         status_label.config(text="Status: RUNNING", fg="green")
 
     except ValueError:
         status_label.config(text="Błędne dane!", fg="orange")
+
 
 
 def stop_mover():
@@ -39,6 +58,9 @@ def default_settings():
     time_entry.delete(0, tk.END)
     time_entry.insert(0, "180")
 
+    interval_entry.delete(0, tk.END)
+    interval_entry.insert(0, "5")
+
     width, height = mover.screen_width, mover.screen_height
     width_entry.delete(0, tk.END)
     width_entry.insert(0, width)
@@ -46,11 +68,12 @@ def default_settings():
     height_entry.insert(0, height)
 
 
+
 # ---------- GUI ----------
 
 root = tk.Tk()
 root.title("MouseMover")
-root.geometry("420x360")
+root.geometry("420x520")
 root.resizable(False, False)
 
 tk.Label(root, text="MouseMover", font=("Arial", 16, "bold")).pack(pady=10)
@@ -62,6 +85,19 @@ status_label.pack()
 tk.Label(root, text="Czas bez ruchu (sekundy):").pack()
 time_entry = tk.Entry(root, width=10, justify="center")
 time_entry.pack(pady=5)
+
+tk.Label(root, text="Postęp do aktywacji:").pack(pady=5)
+progress = ttk.Progressbar(root, length=250)
+progress.pack()
+
+# --- INTERVALS TIME ---
+tk.Label(root, text="Interwał ruchu (sekundy):").pack()
+interval_entry = tk.Entry(root, width=10, justify="center")
+interval_entry.pack(pady=5)
+
+status_icon = tk.Label(root, text="🔴 WAITING", font=("Arial", 12, "bold"))
+status_icon.pack(pady=5)
+
 
 # --- RESOLUTION (OBOK SIEBIE) ---
 tk.Label(root, text="Rozdzielczość ekranu:").pack()
@@ -88,6 +124,8 @@ total_label.pack(pady=3)
 tk.Button(root, text="Start", width=16, command=start_mover).pack(pady=6)
 tk.Button(root, text="Stop", width=16, command=stop_mover).pack()
 tk.Button(root, text="Default Settings", width=16, command=default_settings).pack(pady=6)
+
+
 
 default_settings()
 root.mainloop()
