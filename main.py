@@ -1,25 +1,27 @@
 # MouseMover by Piotr Latka
 # logika + konfiguracja
 
+
 import pyautogui as pag
 import random
 import time
 import threading
-from tkinter import ttk
-
 
 pag.FAILSAFE = True
 
 
 class MouseMover:
-    def __init__(self, status_callback=None):
+    def __init__(self, status_callback=None, stop_callback=None):
         self.running = False
         self.thread = None
+
         self.status_callback = status_callback
+        self.stop_callback = stop_callback
 
         self.afk_limit = 180
         self.move_interval = 5
         self.sleep_time = 1
+        self.max_runtime_minutes = 0  # 0 = brak limitu
 
         self.screen_width, self.screen_height = pag.size()
 
@@ -27,11 +29,12 @@ class MouseMover:
         self.total_seconds = 0
         self.active_mode = False
 
-    def update_settings(self, afk_limit, move_interval, width, height):
+    def update_settings(self, afk_limit, move_interval, width, height, max_runtime_minutes):
         self.afk_limit = afk_limit
         self.move_interval = move_interval
         self.screen_width = width
         self.screen_height = height
+        self.max_runtime_minutes = max_runtime_minutes
 
     def start(self):
         if not self.running:
@@ -51,6 +54,14 @@ class MouseMover:
         while self.running:
             current_pos = pag.position()
             self.total_seconds += 1
+
+            # AUTO STOP
+            if self.max_runtime_minutes > 0:
+                if self.total_seconds >= self.max_runtime_minutes * 60:
+                    self.running = False
+                    if self.stop_callback:
+                        self.stop_callback()
+                    break
 
             if current_pos != curr_coords:
                 self.afk_seconds = 0
