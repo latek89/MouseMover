@@ -1,6 +1,5 @@
 # MouseMover by Piotr Latka
-# logika + konfiguracja
-
+# Logika + konfiguracja
 
 import pyautogui as pag
 import random
@@ -92,3 +91,11 @@ class MouseMover:
                 time.sleep(self.move_interval)
             else:
                 time.sleep(self.sleep_time)
+
+
+# ============================
+#   AUTO-START GUI
+# ============================
+
+if __name__ == "__main__":
+    import mm_gui
